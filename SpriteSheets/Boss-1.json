@@ -1,0 +1,35 @@
+{ "frames": {
+   "Boss-1 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 29, "h": 15 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 29, "h": 15 },
+    "sourceSize": { "w": 29, "h": 15 },
+    "duration": 32
+   },
+   "Boss-1 1.aseprite": {
+    "frame": { "x": 29, "y": 0, "w": 29, "h": 15 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 29, "h": 15 },
+    "sourceSize": { "w": 29, "h": 15 },
+    "duration": 32
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.15-x64",
+  "image": "Boss-1.png",
+  "format": "RGBA8888",
+  "size": { "w": 58, "h": 15 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" },
+   { "name": "Layer 2", "opacity": 210, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
