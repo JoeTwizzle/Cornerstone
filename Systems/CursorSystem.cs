@@ -44,13 +44,26 @@ namespace Cornerstone.Systems
         AudioBuffer PauseInBuffer = null!;
         AudioSource PauseOutSource = null!;
         AudioBuffer PauseOutBuffer = null!;
+        bool canPlayMusic = false;
         public void Init(EcsSystems systems)
         {
             bgmBuffer = new AudioBuffer();
             bgmSource = new AudioSource();
-            bgmBuffer.Init("SFX/Kubbi.wav");
-            bgmSource.SetBuffer(bgmBuffer);
-            bgmSource.SetLoop(true);
+            try
+            {
+                bgmBuffer.Init("SFX/Kubbi.wav");
+                canPlayMusic = true;
+            }
+            catch
+            {
+                canPlayMusic = false;
+            }
+            if (canPlayMusic)
+            {
+                bgmSource.SetBuffer(bgmBuffer);
+                bgmSource.SetLoop(true);
+            }
+
 
 
             PauseInBuffer = new AudioBuffer();
@@ -64,7 +77,10 @@ namespace Cornerstone.Systems
             PauseOutSource.SetBuffer(PauseOutBuffer);
 
             game.CursorVisible = false;
-            bgmSource.Play();
+            if (canPlayMusic)
+            {
+                bgmSource.Play();
+            }
         }
         public static bool boop = false;
         bool once = true;
