@@ -69,21 +69,16 @@ namespace Cornerstone.Systems
 
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in StartEventFilter)
+
+            float dt = game.DeltaTime;
+            timeAccumulator += dt;
+            var targetTimestepDuration = 1 / 120f;
+            while (timeAccumulator >= targetTimestepDuration)
             {
-                enabled = StartEvents.Get(entity).State;
+                Simulate(targetTimestepDuration, systems);
+                timeAccumulator -= targetTimestepDuration;
             }
-            if (enabled)
-            {
-                float dt = game.DeltaTime;
-                timeAccumulator += dt;
-                var targetTimestepDuration = 1 / 120f;
-                while (timeAccumulator >= targetTimestepDuration)
-                {
-                    Simulate(targetTimestepDuration, systems);
-                    timeAccumulator -= targetTimestepDuration;
-                }
-            }
+
             var layer = game.ActiveLayer;
             foreach (var entity in ExplosionFilter)
             {

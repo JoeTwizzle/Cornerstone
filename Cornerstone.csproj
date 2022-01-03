@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\TGELayerDraw\TGELayerDraw\TGELayerDraw.csproj" />
-    <ProjectReference Include="..\..\Twist\ecslite\Leopotam.EcsLite.csproj" />
     <ProjectReference Include="..\ALAudio\ALAudio.csproj" />
   </ItemGroup>
 

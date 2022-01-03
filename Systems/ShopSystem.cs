@@ -55,39 +55,29 @@ namespace Cornerstone.Systems
             shopBG = new Sprite("ShopBG.png");
         }
         Sprite shopBG;
-        Animation drawTextAnim = new Animation(0, 0.5f, Easing.Function.Linear, false);
+        //Animation drawTextAnim = new Animation(0, 0.5f, Easing.Function.Linear, false);
         Color4 hoverColor = new Color4(255, 0, 77, 255);
         Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);
         Color4 bgColor = new Color4(29, 43, 83, 180);
         Color4 inActiveColor = new Color4(32, 47, 54, 255);
         public void Run(EcsSystems systems)
         {
-            foreach (var ent in ShopEventFilter)
-            {
-                active = ShopEvents.Get(ent).Enter;
-                events.DelEntity(ent);
-                drawTextAnim.Reset();
-            }
-            if (!active)
-            {
-                return;
-            }
-            drawTextAnim.Play(game.DeltaTime);
+            game.DisableGroup("Pauseable");
             var layer = game.ActiveLayer;
             string Wa = "SUPPLIES";
             layer.DrawSprite(0, 0, shopBG);
             //layer.FillBox(0, 0, layer.Width, layer.Height, Color4.Black, BlendMode.None);
             var chars = Wa.AsSpan();
-            var slice = chars.Slice(0, Math.Clamp((int)(drawTextAnim.Value * chars.Length), 0, chars.Length));
-            game.textRenderer.DrawText(new Vector2(game.GameArea.X / 2f, 0.5f), slice, Color4.White, TextLayout.CenterAlign);
+            var slice = chars.Slice(0, Math.Clamp((int)(1f * chars.Length), 0, chars.Length));
+            game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, 0.5f), slice, Color4.White, TextLayout.CenterAlign);
             foreach (var ent in PlayerFilter)
             {
                 ref var player = ref Players.Get(ent);
-                CursorSystem.DrawHearts(layer, 10, player.HP, player.Armor, 1, 1);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0 * game.GameArea.Y), "POINTS " + game.Score, Color4.Aqua, TextLayout.RightAlign);
+                DrawHudSystem.DrawHearts(layer, 10, player.HP, player.Armor, 1, 1);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0 * game.GameArea.Y), "POINTS " + game.Score, Color4.Aqua, TextLayout.RightAlign);
                 //------------HP-----------
                 ulong hpUpgradeCost = 50000;
-                game.textRenderer.DrawText(new Vector2(0.065f * game.GameArea.X, .068f * game.GameArea.Y), "Heal " + hpUpgradeCost, BuyColor(player.HP < 10, hpUpgradeCost), TextLayout.LeftAlign);
+                game.TextRenderer.DrawText(new Vector2(0.065f * game.GameArea.X, .068f * game.GameArea.Y), "Heal " + hpUpgradeCost, BuyColor(player.HP < 10, hpUpgradeCost), TextLayout.LeftAlign);
                 Panel hpPanel = new Panel(1, 5, 7, 7, bgColor, outlineColor);
                 if (PanelHover(ref hpPanel, player.HP < 10, hpUpgradeCost))
                 {
@@ -129,8 +119,8 @@ namespace Cornerstone.Systems
                     }
                 }
                 DrawPanel(shotPanel);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.2f * game.GameArea.Y), "FIRE RATE " + shotUpgradeCost, BuyColor(player.ShootLevel < 4, shotUpgradeCost), TextLayout.RightAlign);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.23f * game.GameArea.Y), "LV " + (player.ShootLevel + 1), BuyColor(player.ShootLevel < 4, shotUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.2f * game.GameArea.Y), "FIRE RATE " + shotUpgradeCost, BuyColor(player.ShootLevel < 4, shotUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.23f * game.GameArea.Y), "LV " + (player.ShootLevel + 1), BuyColor(player.ShootLevel < 4, shotUpgradeCost), TextLayout.RightAlign);
                 //------------MOVE SPEED-------------
                 Panel movePanel = new Panel(100, 42, 7, 7, bgColor, outlineColor);
                 ulong moveUpgradeCost = player.MoveLevel switch
@@ -150,8 +140,8 @@ namespace Cornerstone.Systems
                     }
                 }
                 DrawPanel(movePanel);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.3f * game.GameArea.Y), "MOVE SPEED " + moveUpgradeCost, BuyColor(player.MoveLevel < 4, moveUpgradeCost), TextLayout.RightAlign);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.33f * game.GameArea.Y), "LV " + (player.MoveLevel + 1), BuyColor(player.MoveLevel < 4, moveUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.3f * game.GameArea.Y), "MOVE SPEED " + moveUpgradeCost, BuyColor(player.MoveLevel < 4, moveUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.33f * game.GameArea.Y), "LV " + (player.MoveLevel + 1), BuyColor(player.MoveLevel < 4, moveUpgradeCost), TextLayout.RightAlign);
                 //------------JUMP STRENGTH-------------
                 Panel jumpPanel = new Panel(100, 55, 7, 7, bgColor, outlineColor);
                 ulong jumpUpgradeCost = player.JumpLevel switch
@@ -171,8 +161,8 @@ namespace Cornerstone.Systems
                     }
                 }
                 DrawPanel(jumpPanel);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.4f * game.GameArea.Y), "JUMP STRENGTH " + jumpUpgradeCost, BuyColor(player.JumpLevel < 4, jumpUpgradeCost), TextLayout.RightAlign);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.43f * game.GameArea.Y), "LV " + (player.JumpLevel + 1), BuyColor(player.JumpLevel < 4, jumpUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.4f * game.GameArea.Y), "JUMP STRENGTH " + jumpUpgradeCost, BuyColor(player.JumpLevel < 4, jumpUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.43f * game.GameArea.Y), "LV " + (player.JumpLevel + 1), BuyColor(player.JumpLevel < 4, jumpUpgradeCost), TextLayout.RightAlign);
 
                 //------------Armor-------------
                 Panel armorPanel = new Panel(100, 68, 7, 7, bgColor, outlineColor);
@@ -186,15 +176,16 @@ namespace Cornerstone.Systems
                     }
                 }
                 DrawPanel(armorPanel);
-                game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.5f * game.GameArea.Y), "ARMOR " + armorUpgradeCost, BuyColor(player.Armor < 10, armorUpgradeCost), TextLayout.RightAlign);
+                game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.5f * game.GameArea.Y), "ARMOR " + armorUpgradeCost, BuyColor(player.Armor < 10, armorUpgradeCost), TextLayout.RightAlign);
 
                 Panel closePanel = new Panel(108, 120, 19, 7, bgColor, outlineColor);
                 if (PanelHover(ref closePanel, true, 0))
                 {
                     if (MousePressed())
                     {
-                        active = false;
-                        CursorSystem.boop = true;
+                        game.EnableGroup("Game");
+                        game.DisableGroup("Shop");
+                        game.EnableGroupNextFrame("Pauseable");
                     }
                 }
                 closePanel.Draw(layer, BlendMode.Alpha);
@@ -211,7 +202,7 @@ namespace Cornerstone.Systems
             {
                 if (game.MouseState.IsButtonDown(MouseButton.Left) && !game.MouseState.WasButtonDown(MouseButton.Left))
                 {
-                    CursorSystem.PauseInSource.Play();
+                    PauseGameSystem.PauseInSource.Play();
                     return true;
                 }
                 return false;

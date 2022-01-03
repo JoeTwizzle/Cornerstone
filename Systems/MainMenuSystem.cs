@@ -21,28 +21,10 @@ namespace Cornerstone.Systems
         [EcsWorld("Events")]
         EcsWorld world = null!;
         [EcsPool("Events")]
-        EcsPool<MainMenuEvent> MainMenuEvents = null!;
-        [EcsFilter("Events", typeof(MainMenuEvent))]
-        EcsFilter MainMenuEventFilter = null!;
-        [EcsPool("Events")]
-        EcsPool<IntroEvent> IntroEvents = null!;
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-        [EcsPool("Events")]
         EcsPool<ResetGameEvent> ResetEvents = null!;
-        bool active = false;
         Animation bounce = new Animation(0, 0.5f, Easing.Function.BounceEaseOut);
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in MainMenuEventFilter)
-            {
-                active = MainMenuEvents.Get(entity).Entering;
-                MainMenuEvents.Del(entity);
-            }
-            if (!active)
-            {
-                return;
-            }
             Color4 color = new Color4(29, 43, 83, 180);
             Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);
 
@@ -58,10 +40,12 @@ namespace Cornerstone.Systems
                 c = panel.OutlineColor = new Color4(255, 0, 77, 255);
                 if (game.MouseState.IsButtonDown(MouseButton.Left) && !game.MouseState.WasButtonDown(MouseButton.Left))
                 {
+                    game.DisableGroup("Menu");
+                    game.DisableGroup("Intro");
+                    game.EnableGroupNextFrame("GameCore", 2);
+                    game.EnableGroupNextFrame("Game");
+                    game.EnableGroupNextFrame("Pauseable");
                     var ent = world.NewEntity();
-                    IntroEvents.Add(ent);
-                    MainMenuEvents.Add(ent);
-                    StartEvents.Add(ent).State = true;
                     ResetEvents.Add(ent);
                 }
             }
@@ -101,8 +85,8 @@ namespace Cornerstone.Systems
             layer.DrawPixel(x + 1, y + 3, c);
             layer.DrawPixel(x + 1, y + 4, c);
             bounce.Play(game.DeltaTime);
-            game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.96f * game.GameArea.Y), "MUSIC BY KUBBI", Color4.LightSeaGreen, TextLayout.RightAlign);
-            game.textRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.98f * game.GameArea.Y), "ALBUM EMBER", Color4.LightSeaGreen, TextLayout.RightAlign);
+            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.96f * game.GameArea.Y), "MUSIC BY KUBBI", Color4.LightSeaGreen, TextLayout.RightAlign);
+            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.98f * game.GameArea.Y), "ALBUM EMBER", Color4.LightSeaGreen, TextLayout.RightAlign);
             //game.textRenderer.TextScale = new Vector2(32);
             //game.textRenderer.DrawText(game.textRenderer.GetScreenPos(layer.Width / 2, layer.Height / 2), "Play", c, TextLayout.CenterAlign);
         }

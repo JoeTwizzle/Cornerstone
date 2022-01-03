@@ -14,7 +14,7 @@ namespace Cornerstone.Components
         public int HP;
         public float TimeToNextShot;
 
-        public void AutoReset(ref Enemy c, EcsPool<Enemy> pool, int entity)
+        public void AutoReset(ref Enemy c)
         {
             c.HP = 1;
             c.HitBox = new Box2i(-3, -3, 3, 3);

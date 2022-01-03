@@ -35,17 +35,8 @@ namespace Cornerstone.Systems
         {
 
         }
-        bool active = false;
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in StartEventFilter)
-            {
-                active = StartEvents.Get(entity).State;
-            } 
-            if (!active)
-            {
-                return;
-            }
             var layer = game.ActiveLayer;
             for (int y = 81; y < 128; y++)
             {

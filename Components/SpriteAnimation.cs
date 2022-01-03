@@ -18,7 +18,7 @@ namespace Cornerstone.Components
         public int AnimationFrameCount;
         public int FrameWidth;
 
-        public void AutoReset(ref SpriteAnimation c, EcsPool<SpriteAnimation> pool, int entity)
+        public void AutoReset(ref SpriteAnimation c)
         {
             c.FrameWidth = 5;
             c.AnimationAccumulator = 0;

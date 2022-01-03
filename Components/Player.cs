@@ -30,7 +30,7 @@ namespace Cornerstone.Components
         public float FireRate;
         public PlayerState PlayerState;
 
-        public void AutoReset(ref Player c, EcsPool<Player> pool, int entity)
+        public void AutoReset(ref Player c)
         {
             c.Armor = 0;
             c.ShootLevel = 0;

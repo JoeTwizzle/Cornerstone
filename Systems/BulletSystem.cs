@@ -101,22 +101,15 @@ namespace Cornerstone.Systems
         float timeAccumulator;
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in StartEventFilter)
+            float dt = game.DeltaTime;
+            timeAccumulator += dt;
+            var targetTimestepDuration = 1 / 120f;
+            while (timeAccumulator >= targetTimestepDuration)
             {
-                active = StartEvents.Get(entity).State;
+                Simulate(targetTimestepDuration, systems);
+                timeAccumulator -= targetTimestepDuration;
             }
 
-            if (active)
-            {
-                float dt = game.DeltaTime;
-                timeAccumulator += dt;
-                var targetTimestepDuration = 1 / 120f;
-                while (timeAccumulator >= targetTimestepDuration)
-                {
-                    Simulate(targetTimestepDuration, systems);
-                    timeAccumulator -= targetTimestepDuration;
-                }
-            }
             var layer = game.ActiveLayer;
             foreach (var entity in BulletFilter)
             {

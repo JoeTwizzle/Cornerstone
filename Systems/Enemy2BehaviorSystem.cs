@@ -87,13 +87,8 @@ namespace Cornerstone.Systems
         }
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in StartEventFilter)
-            {
-                active = StartEvents.Get(entity).State;
-            }
+
             float dt = game.DeltaTime;
-            if (active)
-            {
                 timeAccumulator += dt;
                 var targetTimestepDuration = 1 / 120f;
                 while (timeAccumulator >= targetTimestepDuration)
@@ -101,7 +96,7 @@ namespace Cornerstone.Systems
                     Simulate(targetTimestepDuration, systems);
                     timeAccumulator -= targetTimestepDuration;
                 }
-            }
+            
         }
 
         private void Simulate(float dt, EcsSystems systems)

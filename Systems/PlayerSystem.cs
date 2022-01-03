@@ -94,23 +94,16 @@ namespace Cornerstone.Systems
                 var playerEnt = world.NewEntity();
                 Players.Add(playerEnt);
             }
-            foreach (var entity in StartEventFilter)
-            {
-                ref var startEvent = ref StartEvents.Get(entity);
-                active = startEvent.State;
-            }
+
             float dt = game.DeltaTime;
             var targetTimestepDuration = 1 / 120f;
-            if (active)
-            {
-                timeAccumulator += dt;
-                while (timeAccumulator >= targetTimestepDuration)
-                {
-                    Simulate(targetTimestepDuration, systems);
-                    timeAccumulator -= targetTimestepDuration;
-                }
-            }
 
+            timeAccumulator += dt;
+            while (timeAccumulator >= targetTimestepDuration)
+            {
+                Simulate(targetTimestepDuration, systems);
+                timeAccumulator -= targetTimestepDuration;
+            }
 
             var layer = game.ActiveLayer;
             foreach (var entity in PlayerFilter)

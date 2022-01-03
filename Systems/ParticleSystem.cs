@@ -33,7 +33,6 @@ namespace Cornerstone.Systems
         Vector2[] wind = new Vector2[8 * 8];
         float gravity = 15f;
         float dragLimit = 60f;
-        bool active = false;
         const int particleCount = 2048;
         Vector2[] positions = new Vector2[particleCount];
         Vector2[] prevPositions = new Vector2[particleCount];
@@ -56,14 +55,6 @@ namespace Cornerstone.Systems
         }
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in MainMenuEventFilter)
-            {
-                active = MainMenuEvents.Get(entity).Entering;
-            }
-            if (!active)
-            {
-                return;
-            }
             float dt = game.DeltaTime;
             timeAccumulator += dt;
             var targetTimestepDuration = 1 / 144f;

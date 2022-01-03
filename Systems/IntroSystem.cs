@@ -19,14 +19,7 @@ namespace Cornerstone.Systems
         MyGame game = null!;
 
         [EcsWorld("Events")]
-        EcsWorld world = null!;
-        [EcsPool("Events")]
-        EcsPool<MainMenuEvent> MainMenuEvents = null!;
-        [EcsPool("Events")]
-        EcsPool<IntroEvent> IntroEvents = null!;
-        [EcsFilter("Events", typeof(IntroEvent))]
-        EcsFilter IntroEventFilter = null!;
-
+        EcsWorld events = null!;
 
         Animation sineWaveAnimation = new Animation(0, 5.4f, Easing.Function.ExponentialEaseIn);
         Animation moveUpAnimation = new Animation(1f, 1.2f, Easing.Function.BounceEaseOut);
@@ -37,14 +30,6 @@ namespace Cornerstone.Systems
 
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in IntroEventFilter)
-            {
-                running = IntroEvents.Get(entity).Entering;
-            }
-            if (!running)
-            {
-                return;
-            }
             float dt = game.DeltaTime;
             if (game.KeyboardState.IsAnyKeyDown && !fillScreenAnimation.IsFinished)
             {
@@ -124,8 +109,7 @@ namespace Cornerstone.Systems
             }
             if (fillScreenAnimation.JustFinished)
             {
-                int ent = world.NewEntity();
-                MainMenuEvents.Add(ent).Entering = true;
+                game.EnableGroup("Menu");
             }
             if (fillScreenAnimation.IsFinished)
             {

@@ -24,7 +24,7 @@ namespace Cornerstone.Systems
             var layer = game.ActiveLayer;
             layer.UpdateVisual();
             game.DisplaySprite(layer);
-            game.textRenderer.Display();
+            game.TextRenderer.Display();
         }
     }
 }

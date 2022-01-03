@@ -27,28 +27,13 @@ namespace Cornerstone.Systems
 
         [EcsFilter(typeof(Transform))]
         EcsFilter TransformFilter = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-        bool active;
         public void Run(EcsSystems systems)
         {
-            foreach (var entity in StartEventFilter)
+            float dt = game.DeltaTime;
+            foreach (var entity in TransformFilter)
             {
-                ref var startEvent = ref StartEvents.Get(entity);
-                active = startEvent.State;
-            }
-            if (active)
-            {
-                float dt = game.DeltaTime;
-                foreach (var entity in TransformFilter)
-                {
-                    ref var t = ref Transforms.Get(entity);
-                    t.Position += t.Velocity * dt;
-                }
+                ref var t = ref Transforms.Get(entity);
+                t.Position += t.Velocity * dt;
             }
         }
     }

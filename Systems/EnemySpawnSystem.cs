@@ -27,9 +27,6 @@ namespace Cornerstone.Systems
         [EcsPool("Events")]
         EcsPool<StartEvent> StartEvents = null!;
 
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
         [EcsPool("Events")]
         EcsPool<ResetGameEvent> ResetEvents = null!;
 
@@ -112,14 +109,6 @@ namespace Cornerstone.Systems
                     world.DelEntity(bullet);
                 }
             }
-            foreach (var entity in StartEventFilter)
-            {
-                active = StartEvents.Get(entity).State;
-            }
-            if (!active)
-            {
-                return;
-            }
             if (gracePeriod < 0 && waveLength - game.DeltaTime <= 0)
             {
                 foreach (var entity in EnemyFilter)
@@ -130,11 +119,8 @@ namespace Cornerstone.Systems
                 {
                     world.DelEntity(entity);
                 }
-                var ent = events.NewEntity();
-                ShopEvents.Add(ent).Enter = true;
-                active = false;
-                var ent2 = events.NewEntity();
-                StartEvents.Add(ent2).State = false;
+                game.EnableGroupNextFrame("Shop");
+                game.DisableGroup("Game");
             }
             if (waveLength <= 0)
             {
@@ -168,8 +154,8 @@ namespace Cornerstone.Systems
             }
             else
             {
-                game.textRenderer.TextScale = new Vector2(40, 40);
-                game.textRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 3f), "DAY " + (currentWave + 1), Color4.White, TextLayout.CenterAlign);
+                game.TextRenderer.TextScale = new Vector2(40, 40);
+                game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 3f), "DAY " + (currentWave + 1), Color4.White, TextLayout.CenterAlign);
             }
         }
         void TrySpawnEnemy1()

@@ -1,12 +1,12 @@
-﻿using OpenTK.Mathematics;
+﻿global using Leopotam.EcsLite.ExtendedSystems;
+global using Leopotam.EcsLite.Di;
+global using Leopotam.EcsLite;
+global using TGELayerDraw;
+global using ALAudio;
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using ALAudio;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using TGELayerDraw;
 using Cornerstone.Systems;
 using Cornerstone.Events;
 using Cornerstone.UI;
@@ -19,24 +19,41 @@ namespace Cornerstone
     {
         public MyGame(Vector2i size) : base(size)
         {
-            CreateSystems();
+
         }
 
         public MyGame(int sizeX, int sizeY) : base(sizeX, sizeY)
         {
-            CreateSystems();
-        }
-        public AudioManager AudioManager;
-        public ulong Score = 0;
 
+        }
+        //Audio
+        public AudioManager AudioManager = null!;
+        //Debug
         byte[] dataA = null!;
         byte[] dataB = null!;
         int iconW = 128;
         int iconH => iconW;
-        public string GPUVendor;
-        public string GPUVersion;
-        void CreateSystems()
+        public string GPUVendor = null!;
+        public string GPUVersion = null!;
+        //ECS
+        EcsPool<EcsGroupSystemState> groupPool = null!;
+        public const string EventWorldName = "Events";
+        List<(string, EcsGroupState, int)> groupEvents = new List<(string, EcsGroupState, int)>();
+        EcsWorld world = null!;
+        EcsWorld events = null!;
+        public EcsSystems Systems = null!;
+        //Game
+        public ulong Score = 0;
+        public TextRenderer TextRenderer = null!;
+        float time = 0;
+        public float Time => time;
+        float deltaTime;
+        public float DeltaTime => deltaTime;
+
+
+        protected override void OnLoad()
         {
+            TextRenderer = new TextRenderer(this, @"consoletext.png");
             GPUVendor = GL.GetString(StringName.Vendor);
             GPUVersion = GL.GetString(StringName.Version);
             using var icon = new ImageMagick.MagickImage("SpriteSheets/Boss-1.png");
@@ -56,43 +73,38 @@ namespace Cornerstone
             Systems = new EcsSystems(world);
             Systems.AddWorld(events, "Events");
             Systems.Add(new ClearActiveLayerSystem());
-            Systems.Add(new IntroSystem());
-            Systems.Add(new ParticleSystem());
-            Systems.Add(new MainMenuSystem());
-            Systems.Add(new GameSystem());
-            Systems.Add(new EnemySpawnSystem());
-            Systems.Add(new Enemy1BehaviorSystem());
-            Systems.Add(new Enemy2BehaviorSystem());
-            Systems.Add(new Enemy3BehaviorSystem());
-            Systems.Add(new ExplosionSystem());
-            Systems.Add(new TransformSystem());
-            Systems.Add(new LifetimeSystem());
-            Systems.Add(new AnimationSystem());
-            Systems.Add(new BulletSystem());
-            Systems.Add(new PlayerSystem());
-            Systems.Add(new ReflectionSystem());
-            Systems.Add(new ShopSystem());
+            Systems.AddGroupInject("Intro", true, EventWorldName, this,
+                new IntroSystem());
+            Systems.AddGroupInject("Menu", false, EventWorldName, this,
+                new ParticleSystem(),
+                new MainMenuSystem());
+            Systems.AddGroupInject("GameCore", false, EventWorldName, this,
+                new DrawBGSystem());
+            Systems.AddGroupInject("Game", false, EventWorldName, this,
+                new EnemySpawnSystem(),
+                new Enemy1BehaviorSystem(),
+                new Enemy2BehaviorSystem(),
+                new Enemy3BehaviorSystem(),
+                new ExplosionSystem(),
+                new TransformSystem(),
+                new LifetimeSystem(),
+                new AnimationSystem(),
+                new BulletSystem(),
+                new PlayerSystem());
+            Systems.AddGroupInject("GameCore", false, EventWorldName, this,
+                new ReflectionSystem());
+            Systems.AddGroupInject("Shop", false, EventWorldName, this,
+                new ShopSystem());
+            Systems.AddGroupInject("Pauseable", false, EventWorldName, this,
+                new PauseGameSystem(),
+                new DrawHudSystem());
             Systems.Add(new CursorSystem());
             Systems.Add(new DisplayTextSystem());
             Systems.Inject(this);
             Systems.Init();
-
             int entity = events.NewEntity();
             events.GetPool<IntroEvent>().Add(entity).Entering = true;
-        }
-        EcsWorld world;
-        EcsWorld events;
-        public EcsSystems Systems;
-        public TextRenderer textRenderer = null!;
-        float time = 0;
-        public float Time => time;
-        float deltaTime;
-        public float DeltaTime => deltaTime;
-
-
-        protected override void OnLoad()
-        {
-            textRenderer = new TextRenderer(this, @"consoletext.png");
+            groupPool = events.GetPool<EcsGroupSystemState>();
         }
         bool side = false;
         float anim = 0;
@@ -123,7 +135,6 @@ namespace Cornerstone
                 }
                 else
                 {
-
                     WindowState = WindowState.Fullscreen;
                     int scaleX = ClientSize.X / 128;
                     int scaleY = ClientSize.Y / 128;
@@ -135,16 +146,67 @@ namespace Cornerstone
                     PixelSize = new Vector2i(scale, scale);
                     SetViewport(dx / 2, dy / 2, 128 * scale, 128 * scale);
                 }
-
             }
             deltaTime = dt;
             time += dt;
+            for (int i = 0; i < groupEvents.Count; i++)
+            {
+                var entity = events.NewEntity();
+                ref var evt = ref groupPool.Add(entity);
+                evt.Name = groupEvents[i].Item1;
+                evt.State = groupEvents[i].Item2;
+                evt.Targets = groupEvents[i].Item3;
+            }
+            groupEvents.Clear();
             Systems.Run();
         }
+
         protected override void OnClosed()
         {
             base.OnClosed();
             AudioManager.Dispose();
+        }
+
+        public void EnableGroup(string name, int targets = 1)
+        {
+            var entity = events.NewEntity();
+            ref var evt = ref groupPool.Add(entity);
+            evt.Name = name;
+            evt.State = EcsGroupState.Enable;
+            evt.Targets = targets;
+        }
+
+        public void DisableGroup(string name, int targets = 1)
+        {
+            var entity = events.NewEntity();
+            ref var evt = ref groupPool.Add(entity);
+            evt.Name = name;
+            evt.State = EcsGroupState.Disable;
+            evt.Targets = targets;
+        }
+
+        public void ToggleGroup(string name, int targets = 1)
+        {
+            var entity = events.NewEntity();
+            ref var evt = ref groupPool.Add(entity);
+            evt.Name = name;
+            evt.State = EcsGroupState.Toggle;
+            evt.Targets = targets;
+        }
+
+        public void EnableGroupNextFrame(string name, int targets = 1)
+        {
+            groupEvents.Add((name, EcsGroupState.Enable, targets));
+        }
+
+        public void DisableGroupNextFrame(string name, int targets = 1)
+        {
+            groupEvents.Add((name, EcsGroupState.Disable, targets));
+        }
+
+        public void ToggleGroupNextFrame(string name, int targets = 1)
+        {
+            groupEvents.Add((name, EcsGroupState.Toggle, targets));
         }
     }
 }
