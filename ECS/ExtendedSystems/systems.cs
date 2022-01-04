@@ -141,9 +141,22 @@ namespace Leopotam.EcsLite.ExtendedSystems
             var world = systems.GetWorld(_eventsWorldName);
             _pool = world.GetPool<EcsGroupSystemState>();
             _filter = world.Filter<EcsGroupSystemState>().End();
-            ref var a = ref _pool.Add(world.NewEntity());
-            a.Name = _name;
-            a.State = _state;
+            int count = 0;
+            foreach (var entity in _filter)
+            {
+                ref var evt = ref _pool.Get(entity);
+                if (evt.Name == _name)
+                {
+                    count++;
+                }
+            }
+            if (count <= 0)
+            {
+                ref var a = ref _pool.Add(world.NewEntity());
+                a.Name = _name;
+                a.State = _state;
+            }
+
             for (var i = 0; i < _allSystems.Length; i++)
             {
                 if (_allSystems[i] is IEcsPreInitSystem preInitSystem)
