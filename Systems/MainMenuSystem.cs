@@ -42,7 +42,7 @@ namespace Cornerstone.Systems
                 {
                     game.DisableGroup("Menu");
                     game.DisableGroup("Intro");
-                    game.EnableGroupNextFrame("GameCore", 2);
+                    game.EnableGroupNextFrame("GameCore");
                     game.EnableGroupNextFrame("Game");
                     game.EnableGroupNextFrame("Pauseable");
                     var ent = world.NewEntity();

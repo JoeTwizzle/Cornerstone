@@ -36,9 +36,10 @@ namespace Cornerstone
         public string GPUVendor = null!;
         public string GPUVersion = null!;
         //ECS
+        EcsFilter statesFilter = null!;
         EcsPool<EcsGroupSystemState> groupPool = null!;
         public const string EventWorldName = "Events";
-        List<(string, EcsGroupState, int)> groupEvents = new List<(string, EcsGroupState, int)>();
+        List<(string, bool)> groupEvents = new List<(string, bool)>();
         EcsWorld world = null!;
         EcsWorld events = null!;
         public EcsSystems Systems = null!;
@@ -105,6 +106,7 @@ namespace Cornerstone
             int entity = events.NewEntity();
             events.GetPool<IntroEvent>().Add(entity).Entering = true;
             groupPool = events.GetPool<EcsGroupSystemState>();
+            statesFilter = events.Filter<EcsGroupSystemState>().End();
         }
         bool side = false;
         float anim = 0;
@@ -151,11 +153,14 @@ namespace Cornerstone
             time += dt;
             for (int i = 0; i < groupEvents.Count; i++)
             {
-                var entity = events.NewEntity();
-                ref var evt = ref groupPool.Add(entity);
-                evt.Name = groupEvents[i].Item1;
-                evt.State = groupEvents[i].Item2;
-                evt.Targets = groupEvents[i].Item3;
+                foreach (var item in statesFilter)
+                {
+                    ref var group = ref groupPool.Get(item);
+                    if (group.Name == groupEvents[i].Item1)
+                    {
+                        group.State = groupEvents[i].Item2;
+                    }
+                }
             }
             groupEvents.Clear();
             Systems.Run();
@@ -167,46 +172,64 @@ namespace Cornerstone
             AudioManager.Dispose();
         }
 
-        public void EnableGroup(string name, int targets = 1)
+        public void EnableGroup(string name)
         {
-            var entity = events.NewEntity();
-            ref var evt = ref groupPool.Add(entity);
-            evt.Name = name;
-            evt.State = EcsGroupState.Enable;
-            evt.Targets = targets;
+            foreach (var ent in statesFilter)
+            {
+                ref var group = ref groupPool.Get(ent);
+                if (group.Name == name)
+                {
+                    group.State = true;
+                }
+            }
         }
 
-        public void DisableGroup(string name, int targets = 1)
+        public void DisableGroup(string name)
         {
-            var entity = events.NewEntity();
-            ref var evt = ref groupPool.Add(entity);
-            evt.Name = name;
-            evt.State = EcsGroupState.Disable;
-            evt.Targets = targets;
+            foreach (var item in statesFilter)
+            {
+                ref var group = ref groupPool.Get(item);
+                if (group.Name == name)
+                {
+                    group.State = false;
+                }
+            }
         }
 
-        public void ToggleGroup(string name, int targets = 1)
+        public void ToggleGroup(string name)
         {
-            var entity = events.NewEntity();
-            ref var evt = ref groupPool.Add(entity);
-            evt.Name = name;
-            evt.State = EcsGroupState.Toggle;
-            evt.Targets = targets;
+            foreach (var item in statesFilter)
+            {
+                ref var group = ref groupPool.Get(item);
+                if (group.Name == name)
+                {
+                    group.State = !group.State;
+                }
+            }
         }
 
-        public void EnableGroupNextFrame(string name, int targets = 1)
+        public void EnableGroupNextFrame(string name)
         {
-            groupEvents.Add((name, EcsGroupState.Enable, targets));
+            groupEvents.Add((name, true));
         }
 
-        public void DisableGroupNextFrame(string name, int targets = 1)
+        public void DisableGroupNextFrame(string name)
         {
-            groupEvents.Add((name, EcsGroupState.Disable, targets));
+            groupEvents.Add((name, false));
         }
 
-        public void ToggleGroupNextFrame(string name, int targets = 1)
+        public void ToggleGroupNextFrame(string name)
         {
-            groupEvents.Add((name, EcsGroupState.Toggle, targets));
+            bool state = false;
+            foreach (var item in statesFilter)
+            {
+                ref var group = ref groupPool.Get(item);
+                if (group.Name == name)
+                {
+                    state = group.State;
+                }
+            }
+            groupEvents.Add((name, !state));
         }
     }
 }
