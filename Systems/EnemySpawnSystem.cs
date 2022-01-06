@@ -154,8 +154,8 @@ namespace Cornerstone.Systems
             }
             else
             {
-                game.TextRenderer.TextScale = new Vector2(40, 40);
-                game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 3f), "DAY " + (currentWave + 1), Color4.White, TextLayout.CenterAlign);
+                game.TextRenderer.TextScale = new Vector2(80, 80);
+                game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 2.8f), "DAY " + (currentWave + 1), Color4.White, TextLayout.CenterAlign);
             }
         }
         void TrySpawnEnemy1()

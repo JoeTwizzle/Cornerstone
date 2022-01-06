@@ -85,13 +85,15 @@ namespace Cornerstone.UI
             {
                 vec4 msd = texture(_AtlasTex, vec2(v_UV.x,v_UV.y));
                 float sd = median(msd.r, msd.g, msd.b);
-                float screenPxDistance = _Res*(sd - 0.5);
+                float screenPxDistance = _Res * (sd - 0.5);
                 float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+
                 color = vec4(fs_color.rgb, fs_color.a * opacity);
             }";
-        SpriteBatch SpriteBatch = null!;
+        public Vector2 TextScale = new Vector2(80);
         public float Sharpness = 1.8f;
         Game game;
+        SpriteBatch SpriteBatch = null!;
         public TextRenderer(Game game, string path)
         {
             this.game = game;
@@ -100,48 +102,49 @@ namespace Cornerstone.UI
             SpriteBatch.Texture = FontAtlas;
             SpriteBatch.Begin();
         }
-        int Width => game.ClientSize.X;
-        int Height => game.ClientSize.Y;
         Dictionary<char, int> charIndexMapping = new Dictionary<char, int>();
         struct CharInfo
         {
+            public float Advance;
             public Vector4 UV;
+            public Vector4 PlaneCoords;
             public Vector4 Layout;
 
-            public CharInfo(Vector4 uV, Vector4 layout)
+            public CharInfo(float advance, Vector4 uV, Vector4 planeCoords, Vector4 layout)
             {
+                Advance = advance;
                 UV = uV;
+                PlaneCoords = planeCoords;
                 Layout = layout;
             }
         }
         List<CharInfo> infos = new List<CharInfo>();
         Texture2D FontAtlas = new Texture2D();
 
-       
 
-        public void DrawChar(Vector2 pos, char c, Color4 color, TextLayout textLayout = TextLayout.LeftAlign)
-        {
-            DrawChar(pos.X, pos.Y, c, color, textLayout);
-        }
 
-        public void DrawChar(float x, float y, char c, Color4 color, TextLayout textLayout = TextLayout.LeftAlign)
-        {
-            float offset = textLayout switch
-            {
-                TextLayout.LeftAlign => 0,
-                TextLayout.CenterAlign => TextScale.X / 2f,
-                TextLayout.RightAlign => TextScale.X,
-                _ => 0
-            };
-            if (charIndexMapping.TryGetValue(c, out int index))
-            {
-                var info = infos[index];
-                var uv = info.UV;
-                SpriteBatch.Draw(new Vector2(-1, -1) + Vector2.Divide(new Vector2(offset + x, y), game.GameArea), Vector2.Divide(new Vector2(1, 1), TextScale * (Width / (float)Height)), new Vector4(uv.X, 1 - uv.W, uv.Z, 1 - uv.Y), color);
-            }
-        }
+        //public void DrawChar(Vector2 pos, char c, Color4 color, TextLayout textLayout = TextLayout.LeftAlign)
+        //{
+        //    DrawChar(pos.X, pos.Y, c, color, textLayout);
+        //}
 
-        public Vector2 TextScale = new Vector2(32);
+        //public void DrawChar(float x, float y, char c, Color4 color, TextLayout textLayout = TextLayout.LeftAlign)
+        //{
+        //    float offset = textLayout switch
+        //    {
+        //        TextLayout.LeftAlign => 0,
+        //        TextLayout.CenterAlign => TextScale.X / 2f,
+        //        TextLayout.RightAlign => TextScale.X,
+        //        _ => 0
+        //    };
+        //    if (charIndexMapping.TryGetValue(c, out int index))
+        //    {
+        //        var info = infos[index];
+        //        var uv = info.UV;
+        //        SpriteBatch.Draw(new Vector2(-1, -1) + Vector2.Divide(new Vector2(offset + x, y), game.GameArea), Vector2.Divide(new Vector2(1, 1), TextScale * (Width / (float)Height)), new Vector4(uv.X, 1 - uv.W, uv.Z, 1 - uv.Y), color);
+        //    }
+        //}
+
 
         public Vector2 GetScreenPos(Vector2i pos)
         {
@@ -171,21 +174,38 @@ namespace Cornerstone.UI
         public void DrawText(float x, float y, ReadOnlySpan<char> text, Color4 color, TextLayout textLayout = TextLayout.LeftAlign)
         {
             var chars = text;
-            float offset = textLayout switch
-            {
-                TextLayout.LeftAlign => 0,
-                TextLayout.CenterAlign => (TextScale.X * chars.Length * advance) / 2f,
-                TextLayout.RightAlign => TextScale.X * chars.Length * advance,
-                _ => 0
-            };
+            float length = 0;
             for (int i = 0; i < chars.Length; i++)
             {
                 if (charIndexMapping.TryGetValue(chars[i], out int index))
                 {
                     var info = infos[index];
+                    length += info.Advance * TextScale.X * 0.5f;
+                }
+            }
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (charIndexMapping.TryGetValue(chars[i], out int index))
+                {
+                    var info = infos[index];
+                    var advance = info.Advance;
                     var uv = info.UV;
-
-                    SpriteBatch.Draw(new Vector2(-1, -1) + Vector2.Divide(new Vector2(x - offset + i * advance * TextScale.X, y), game.GameArea) * 2f, Vector2.Divide(new Vector2(1, 1), game.GameArea) * TextScale, new Vector4(uv.X, 1 - uv.W, uv.Z, 1 - uv.Y), color);
+                    var offsets = info.PlaneCoords;
+                    float formattingOffset = textLayout switch
+                    {
+                        TextLayout.LeftAlign => 0,
+                        TextLayout.CenterAlign => -length * 0.5f,
+                        TextLayout.RightAlign => -length,
+                        _ => 0
+                    };
+                    Vector2 charScale = new Vector2(offsets.Z - offsets.X, offsets.W - offsets.Y);
+                    Vector2 pos = new Vector2(-1, -1) + Vector2.Divide(new Vector2(x + formattingOffset, y), game.GameArea) * 2f;
+                    Vector2 offset = Vector2.Divide(new Vector2(offsets.X, (1 - offsets.W)) * TextScale, game.GameArea);
+                    Vector2 globalScale = Vector2.Divide(new Vector2(1, 1), game.GameArea);
+                    Vector2 scale = globalScale * TextScale * charScale;
+                    Vector4 uvs = new Vector4(uv.X, 1 - uv.W, uv.Z, 1 - uv.Y);
+                    SpriteBatch.Draw(pos + offset, scale, uvs, color);
+                    x += advance * TextScale.X * 0.5f;
                 }
             }
         }
@@ -201,7 +221,6 @@ namespace Cornerstone.UI
             SpriteBatch.Begin();
             GL.Disable(EnableCap.Blend);
         }
-        float advance;
         void LoadMSDF(string path)
         {
             var dir = Path.GetDirectoryName(path);
@@ -239,7 +258,7 @@ namespace Cornerstone.UI
                     throw new FormatException("Invalid csv format");
                 }
                 char c = (char)int.Parse(array[0], culture);
-                advance = float.Parse(array[1], culture);
+                float advance = float.Parse(array[1], culture);
 
                 //idk
                 float planeBoundsL = float.Parse(array[2], culture);
@@ -251,7 +270,7 @@ namespace Cornerstone.UI
                 float atlasBoundsB = float.Parse(array[7], culture) / img.Height;
                 float atlasBoundsR = float.Parse(array[8], culture) / img.Width;
                 float atlasBoundsT = float.Parse(array[9], culture) / img.Height;
-                infos.Add(new CharInfo(new Vector4(atlasBoundsL, atlasBoundsB, atlasBoundsR, atlasBoundsT), new Vector4(planeBoundsL, planeBoundsB, planeBoundsR, planeBoundsT)));
+                infos.Add(new CharInfo(advance, new Vector4(atlasBoundsL, atlasBoundsB, atlasBoundsR, atlasBoundsT), new Vector4(planeBoundsL, planeBoundsB, planeBoundsR, planeBoundsT), new Vector4(planeBoundsL, planeBoundsB, planeBoundsR, planeBoundsT)));
                 charIndexMapping.Add(c, i++);
             }
         }

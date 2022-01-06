@@ -85,8 +85,8 @@ namespace Cornerstone.Systems
             layer.DrawPixel(x + 1, y + 3, c);
             layer.DrawPixel(x + 1, y + 4, c);
             bounce.Play(game.DeltaTime);
-            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.96f * game.GameArea.Y), "MUSIC BY KUBBI", Color4.LightSeaGreen, TextLayout.RightAlign);
-            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.98f * game.GameArea.Y), "ALBUM EMBER", Color4.LightSeaGreen, TextLayout.RightAlign);
+            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.92f * game.GameArea.Y), "MUSIC BY KUBBI", Color4.LightSeaGreen, TextLayout.RightAlign);
+            game.TextRenderer.DrawText(new Vector2(1f * game.GameArea.X, 0.95f * game.GameArea.Y), "ALBUM EMBER", Color4.LightSeaGreen, TextLayout.RightAlign);
             //game.textRenderer.TextScale = new Vector2(32);
             //game.textRenderer.DrawText(game.textRenderer.GetScreenPos(layer.Width / 2, layer.Height / 2), "Play", c, TextLayout.CenterAlign);
         }

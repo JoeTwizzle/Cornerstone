@@ -48,7 +48,7 @@ namespace Cornerstone.Systems
             }
             if (!state)
             {
-                game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 3f), "PAUSED", Color4.White, UI.TextLayout.CenterAlign);
+                game.TextRenderer.DrawText(new Vector2(game.GameArea.X / 2f, game.GameArea.Y / 2.8f), "PAUSED", Color4.White, UI.TextLayout.CenterAlign);
             }
         }
     }
