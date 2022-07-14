@@ -48,13 +48,13 @@ namespace Cornerstone.Systems
 
         [EcsFilter("Events", typeof(ShopEvent))]
         EcsFilter ShopEventFilter = null!;
-        //bodge
-        public static bool active = false;
+        
+        Sprite shopBG = null!;
         public void Init(EcsSystems systems)
         {
             shopBG = new Sprite("ShopBG.png");
         }
-        Sprite shopBG;
+        
         //Animation drawTextAnim = new Animation(0, 0.5f, Easing.Function.Linear, false);
         Color4 hoverColor = new Color4(255, 0, 77, 255);
         Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);
