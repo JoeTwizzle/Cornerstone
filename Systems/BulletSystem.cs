@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -15,63 +12,48 @@ using ALAudio;
 
 namespace Cornerstone.Systems
 {
-    internal class BulletSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Canvas")]
+    [EcsWrite("Default")]
+    internal class BulletSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsFilter PlayerFilter;
+        readonly EcsPool<Player> Players;
+        readonly EcsFilter BulletFilter;
+        readonly EcsPool<Bullet> Bullets;
+        readonly EcsPool<Enemy> Enemies;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<Explosion> Explosions;
+        readonly EcsPool<SpriteAnimation> SpriteAnimations;
+        readonly EcsPool<Lifetime> Lifetimes;
+        readonly EcsFilter EnemyFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool]
-        EcsPool<Bullet> Bullets = null!;
-
-        [EcsFilter(typeof(Bullet))]
-        EcsFilter BulletFilter = null!;
-
-        [EcsPool]
-        EcsPool<Enemy> Enemies = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<Explosion> Explosions = null!;
-
-        [EcsPool]
-        EcsPool<SpriteAnimation> SpriteAnimations = null!;
-
-        [EcsPool]
-        EcsPool<Lifetime> Lifetimes = null!;
-
-        [EcsFilter(typeof(Enemy))]
-        EcsFilter EnemyFilter = null!;
-
-        Sprite explosionSprite = null!;
-        AudioSource playerExplosionSource = null!;
-        AudioBuffer playerExplosionBuffer = null!;
-        AudioSource playerHitSource = null!;
-        AudioBuffer playerHitBuffer = null!;
-        AudioSource[] explosionSources = new AudioSource[10];//20 simultaneous sounds
-        AudioBuffer explosionBuffer = null!;
+        readonly Sprite explosionSprite;
+        readonly AudioSource playerExplosionSource;
+        readonly AudioBuffer playerExplosionBuffer;
+        readonly AudioSource playerHitSource;
+        readonly AudioBuffer playerHitBuffer;
+        readonly AudioSource[] explosionSources = new AudioSource[10];//20 simultaneous sounds
+        readonly AudioBuffer explosionBuffer;
         int explosionIndex = 0;
-        public void Init(EcsSystems systems)
+        float timeAccumulator;
+
+        public BulletSystem(EcsSystems systems) : base(systems)
         {
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+            game = GetSingleton<MyGame>();
+            world = GetWorld();
+            Enemies = GetPool<Enemy>();
+            BulletFilter = FilterInc<Bullet>().End();
+            Transforms = GetPool<Transform>();
+            Bullets = GetPool<Bullet>();
+            Explosions = GetPool<Explosion>();
+            SpriteAnimations=GetPool<SpriteAnimation>();
+            Lifetimes=GetPool<Lifetime>();
+            EnemyFilter = FilterInc<Enemy>().End();
+
             playerExplosionBuffer = new AudioBuffer();
             playerExplosionBuffer.Init("SFX/Death.wav");
             playerExplosionSource = new AudioSource();
@@ -97,9 +79,8 @@ namespace Cornerstone.Systems
             explosionIndex++;
             explosionIndex %= explosionSources.Length;
         }
-        bool active = false;
-        float timeAccumulator;
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             float dt = game.DeltaTime;
             timeAccumulator += dt;

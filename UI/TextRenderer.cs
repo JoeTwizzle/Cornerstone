@@ -93,7 +93,7 @@ namespace Cornerstone.UI
         public Vector2 TextScale = new Vector2(80);
         public float Sharpness = 1.8f;
         Game game;
-        SpriteBatch SpriteBatch = null!;
+        SpriteBatch SpriteBatch;
         public TextRenderer(Game game, string path)
         {
             this.game = game;

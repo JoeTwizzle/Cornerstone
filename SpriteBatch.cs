@@ -1,8 +1,5 @@
 ﻿using Cornerstone.UI;
 using GLGraphics;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.Di;
-using Leopotam.EcsLite.ExtendedSystems;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -58,18 +55,18 @@ namespace Cornerstone
             color = vec4(texture(_MainTex, fs_uv)) * fs_color;
         }";
 
-        public GLProgram GLProgram = null!;
-        VertexArray vao = null!;
-        GLBuffer VertexBuffer = null!;
-        GLBuffer IndexBuffer = null!;
+        public GLProgram GLProgram;
+        VertexArray vao;
+        GLBuffer VertexBuffer;
+        GLBuffer IndexBuffer;
         public bool IsRunning { get; private set; }
         public Texture2D? Texture = null;
 
         int maxSpritesInBatch;
         int spriteCount = 0;
 
-        int[] indices = null!;
-        Vertex[] vertices = null!;
+        int[] indices;
+        Vertex[] vertices;
         public SpriteBatch()
         {
             CreateShader(vert, frag);

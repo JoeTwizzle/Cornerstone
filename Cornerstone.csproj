@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationIcon>Boss-1.ico</ApplicationIcon>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ecslite\ecslite\ecslite.csproj" />
     <ProjectReference Include="..\..\TGELayerDraw\TGELayerDraw\TGELayerDraw.csproj" />
     <ProjectReference Include="..\ALAudio\ALAudio.csproj" />
   </ItemGroup>

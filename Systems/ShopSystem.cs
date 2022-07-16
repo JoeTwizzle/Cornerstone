@@ -2,74 +2,46 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using System.Threading.Tasks;
-using TGELayerDraw;
-using Cornerstone.Helpers;
 using Cornerstone.Events;
 using Cornerstone.UI;
 using Cornerstone.Components;
 
 namespace Cornerstone.Systems
 {
-    internal class ShopSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Default", typeof(Player))]
+    [EcsWrite("Canvas")]
+    internal class ShopSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsPool<Player> Players;
+        readonly EcsFilter PlayerFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
+        readonly Sprite shopBG;
 
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool("Events")]
-        EcsPool<ResetGameEvent> ResetEvents = null!;
-
-        [EcsFilter("Events", typeof(ResetGameEvent))]
-        EcsFilter ResetEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool("Events")]
-        EcsPool<ShopEvent> ShopEvents = null!;
-
-        [EcsFilter("Events", typeof(ShopEvent))]
-        EcsFilter ShopEventFilter = null!;
-        
-        Sprite shopBG = null!;
-        public void Init(EcsSystems systems)
-        {
-            shopBG = new Sprite("ShopBG.png");
-        }
-        
         //Animation drawTextAnim = new Animation(0, 0.5f, Easing.Function.Linear, false);
         Color4 hoverColor = new Color4(255, 0, 77, 255);
         Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);
         Color4 bgColor = new Color4(29, 43, 83, 180);
         Color4 inActiveColor = new Color4(32, 47, 54, 255);
-        public void Run(EcsSystems systems)
+
+        public ShopSystem(EcsSystems systems) : base(systems)
         {
-            game.DisableGroup("Pauseable");
+            game = GetSingleton<MyGame>();
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+            shopBG = new Sprite("ShopBG.png");
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
+        {
+            game.DisableGroupNextFrame("Pauseable");
             var layer = game.ActiveLayer;
             string Wa = "SUPPLIES";
             layer.DrawSprite(0, 0, shopBG);
             //layer.FillBox(0, 0, layer.Width, layer.Height, Color4.Black, BlendMode.None);
             var chars = Wa.AsSpan();
             var slice = chars.Slice(0, Math.Clamp((int)(1f * chars.Length), 0, chars.Length));
-            game.TextRenderer.DrawText(new Vector2(game.GameArea.X *0.5f, -0.015f * game.GameArea.Y), slice, Color4.White, TextLayout.CenterAlign);
+            game.TextRenderer.DrawText(new Vector2(game.GameArea.X * 0.5f, -0.015f * game.GameArea.Y), slice, Color4.White, TextLayout.CenterAlign);
             foreach (var ent in PlayerFilter)
             {
                 ref var player = ref Players.Get(ent);
@@ -183,8 +155,8 @@ namespace Cornerstone.Systems
                 {
                     if (MousePressed())
                     {
-                        game.EnableGroup("Game");
-                        game.DisableGroup("Shop");
+                        game.EnableGroupNextFrame("Game");
+                        game.DisableGroupNextFrame("Shop");
                         game.EnableGroupNextFrame("Pauseable");
                     }
                 }

@@ -10,31 +10,21 @@ namespace Cornerstone.Systems
         RTL,
         LTR
     }
-    internal class CursorSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Canvas")]
+    internal class CursorSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        MyGame game;
 
-        [EcsWorld("Events")]
-        EcsWorld Events = null!;
+        AudioSource bgmSource;
+        AudioBuffer bgmBuffer;
 
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-        AudioSource bgmSource = null!;
-        AudioBuffer bgmBuffer = null!;
-        
         bool canPlayMusic = false;
-        public void Init(EcsSystems systems)
+        public static bool boop = false;
+        Vector2i prevCursorPos;
+
+        public CursorSystem(EcsSystems systems) : base(systems)
         {
+            game = GetSingleton<MyGame>();
             bgmBuffer = new AudioBuffer();
             bgmSource = new AudioSource();
             try
@@ -57,11 +47,8 @@ namespace Cornerstone.Systems
                 bgmSource.Play();
             }
         }
-        public static bool boop = false;
-        bool once = true;
-        bool state = false;
-        Vector2i prevCursorPos;
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             var c = Color4.FromHsv(new Vector4(game.Time * 0.2f % 1f, 1, 1, 1));
             var layer = game.ActiveLayer;

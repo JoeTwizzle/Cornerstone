@@ -7,18 +7,20 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Systems
 {
-    internal class PauseGameSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Canvas")]
+    internal class PauseGameSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
-
+        readonly MyGame game;
+        
         public static AudioSource PauseInSource = null!;
-        AudioBuffer PauseInBuffer = null!;
+        readonly AudioBuffer PauseInBuffer;
         public static AudioSource PauseOutSource = null!;
-        AudioBuffer PauseOutBuffer = null!;
-        public void Init(EcsSystems systems)
-        {
+        readonly AudioBuffer PauseOutBuffer;
+        bool state = true;
 
+        public PauseGameSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
             PauseInBuffer = new AudioBuffer();
             PauseInSource = new AudioSource();
             PauseInBuffer.Init("SFX/PauseIn.wav");
@@ -30,12 +32,11 @@ namespace Cornerstone.Systems
             PauseOutSource.SetBuffer(PauseOutBuffer);
         }
 
-        bool state = true;
-        public void Run(EcsSystems systems)
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             if (game.KeyboardState.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Escape))
             {
-                game.ToggleGroup("Game");
+                game.ToggleGroupNextFrame("Game");
                 if (state)
                 {
                     PauseInSource.Play();

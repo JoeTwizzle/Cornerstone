@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -13,21 +10,10 @@ using Cornerstone.Events;
 
 namespace Cornerstone.Systems
 {
-    internal class ParticleSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    internal class ParticleSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld world = null!;
-        [EcsPool("Events")]
-        EcsPool<MainMenuEvent> MainMenuEvents = null!;
-        [EcsFilter("Events", typeof(MainMenuEvent))]
-        EcsFilter MainMenuEventFilter = null!;
-        [EcsPool("Events")]
-        EcsPool<IntroEvent> IntroEvents = null!;
-        [EcsFilter("Events", typeof(IntroEvent))]
-        EcsFilter IntroEventFilter = null!;
+        readonly MyGame game;
         float timeAccumulator = 0;
 
         Vector2[] wind = new Vector2[8 * 8];
@@ -37,8 +23,12 @@ namespace Cornerstone.Systems
         Vector2[] positions = new Vector2[particleCount];
         Vector2[] prevPositions = new Vector2[particleCount];
         Vector2[] velocites = new Vector2[particleCount];
-        public ParticleSystem()
+        Vector2 mousePosPrev;
+        Vector2 mousePos;
+
+        public ParticleSystem(EcsSystems systems) : base(systems)
         {
+            game = GetSingleton<MyGame>();
             for (int i = 0; i < 8; i++)
             {
                 float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
@@ -53,9 +43,10 @@ namespace Cornerstone.Systems
                 positions[i] = new Vector2(Random.Shared.NextSingle() * 128, Random.Shared.NextSingle() * -256);
             }
         }
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
-            float dt = game.DeltaTime;
+            float dt = elapsed;
             timeAccumulator += dt;
             var targetTimestepDuration = 1 / 144f;
             while (timeAccumulator >= targetTimestepDuration)
@@ -74,8 +65,7 @@ namespace Cornerstone.Systems
                 layer.DrawLine(prev, particle, color, BlendMode.Add);
             }
         }
-        Vector2 mousePosPrev;
-        Vector2 mousePos;
+
         void Simulate(float dt)
         {
             mousePosPrev = mousePos;

@@ -1,4 +1,5 @@
-﻿
+﻿global using EcsLite;
+global using EcsLite.Systems;
 using Cornerstone;
 
 MyGame myGame = new MyGame(new OpenTK.Mathematics.Vector2i(128, 128));

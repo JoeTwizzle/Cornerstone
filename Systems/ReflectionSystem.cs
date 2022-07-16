@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -14,28 +11,17 @@ using Cornerstone.Components;
 using OpenTK.Graphics.OpenGL4;
 namespace Cornerstone.Systems
 {
-    internal class ReflectionSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Canvas")]
+    internal class ReflectionSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        public void Init(EcsSystems systems)
+        public ReflectionSystem(EcsSystems systems) : base(systems)
         {
-
+            game = GetSingleton<MyGame>();
         }
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             for (int y = 81; y < 128; y++)

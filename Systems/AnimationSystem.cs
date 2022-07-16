@@ -1,38 +1,28 @@
-﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using System.Threading.Tasks;
-using TGELayerDraw;
-using Cornerstone.Helpers;
-using Cornerstone.Events;
-using Cornerstone.UI;
-using Cornerstone.Components;
+﻿using Cornerstone.Components;
+using OpenTK.Mathematics;
 namespace Cornerstone.Systems
 {
-    internal class AnimationSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    [EcsRead("Default", typeof(Transform))]
+    [EcsWrite("Default", typeof(Animation))]
+    internal class AnimationSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<SpriteAnimation> Animations;
+        readonly EcsFilter AnimationFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<SpriteAnimation> Animations = null!;
-
-        [EcsFilter(typeof(SpriteAnimation), typeof(Transform))]
-        EcsFilter AnimationFilter = null!;
-
-        public void Run(EcsSystems systems)
+        public AnimationSystem(EcsSystems systems) : base(systems)
         {
-            float dt = game.DeltaTime;
+            game = GetSingleton<MyGame>();
+            Transforms = GetPool<Transform>();
+            Animations = GetPool<SpriteAnimation>();
+            AnimationFilter = FilterInc<SpriteAnimation>().Inc<Transform>().End();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
+        {
+            float dt = elapsed;
             var layer = game.ActiveLayer;
             foreach (var entity in AnimationFilter)
             {

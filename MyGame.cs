@@ -1,7 +1,4 @@
-﻿global using Leopotam.EcsLite.ExtendedSystems;
-global using Leopotam.EcsLite.Di;
-global using Leopotam.EcsLite;
-global using TGELayerDraw;
+﻿global using TGELayerDraw;
 global using ALAudio;
 using OpenTK.Mathematics;
 using System;
@@ -12,6 +9,7 @@ using Cornerstone.Events;
 using Cornerstone.UI;
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
+using Cornerstone.Components;
 
 namespace Cornerstone
 {
@@ -27,25 +25,22 @@ namespace Cornerstone
 
         }
         //Audio
-        public AudioManager AudioManager = null!;
+        public AudioManager AudioManager;
         //Debug
-        byte[] dataA = null!;
-        byte[] dataB = null!;
+        byte[] dataA;
+        byte[] dataB;
         int iconW = 128;
         int iconH => iconW;
-        public string GPUVendor = null!;
-        public string GPUVersion = null!;
+        public string GPUVendor;
+        public string GPUVersion;
         //ECS
-        EcsFilter statesFilter = null!;
-        EcsPool<EcsGroupSystemState> groupPool = null!;
         public const string EventWorldName = "Events";
-        List<(string, bool)> groupEvents = new List<(string, bool)>();
-        EcsWorld world = null!;
-        EcsWorld events = null!;
-        public EcsSystems Systems = null!;
+        EcsWorld world;
+        EcsWorld events;
+        public EcsSystems Systems;
         //Game
         public ulong Score = 0;
-        public TextRenderer TextRenderer = null!;
+        public TextRenderer TextRenderer;
         float time = 0;
         public float Time => time;
         float deltaTime;
@@ -70,43 +65,60 @@ namespace Cornerstone
             SetViewport(0, 0, 128 * PixelSize.X, 128 * PixelSize.Y);
             FitWindow();
             events = new EcsWorld();
+            events.AllowPool<IntroEvent>();
+            events.AllowPool<MainMenuEvent>();
+            events.AllowPool<ResetGameEvent>();
+            events.AllowPool<ShopEvent>();
+            events.AllowPool<StartEvent>();
+
             world = new EcsWorld();
-            Systems = new EcsSystems(world);
-            Systems.AddWorld(events, "Events");
-            Systems.Add(new ClearActiveLayerSystem());
-            Systems.AddGroupInject("Intro", true, EventWorldName, this,
-                new IntroSystem());
-            Systems.AddGroupInject("Menu", false, EventWorldName, this,
-                new ParticleSystem(),
-                new MainMenuSystem());
-            Systems.AddGroupInject("GameCore", false, EventWorldName, this,
-                new DrawBGSystem());
-            Systems.AddGroupInject("Game", false, EventWorldName, this,
-                new EnemySpawnSystem(),
-                new Enemy1BehaviorSystem(),
-                new Enemy2BehaviorSystem(),
-                new Enemy3BehaviorSystem(),
-                new ExplosionSystem(),
-                new TransformSystem(),
-                new LifetimeSystem(),
-                new AnimationSystem(),
-                new BulletSystem(),
-                new PlayerSystem());
-            Systems.AddGroupInject("GameCore", false, EventWorldName, this,
-                new ReflectionSystem());
-            Systems.AddGroupInject("Shop", false, EventWorldName, this,
-                new ShopSystem());
-            Systems.AddGroupInject("Pauseable", false, EventWorldName, this,
-                new PauseGameSystem(),
-                new DrawHudSystem());
-            Systems.Add(new CursorSystem());
-            Systems.Add(new DisplayTextSystem());
-            Systems.Inject(this);
+            world.AllowPool<Player>();
+            world.AllowPool<Transform>();
+            world.AllowPool<Bullet>();
+            world.AllowPool<Enemy>();
+            world.AllowPool<Enemy1>();
+            world.AllowPool<Enemy2>();
+            world.AllowPool<Enemy3>();
+            world.AllowPool<Explosion>();
+            world.AllowPool<Lifetime>();
+            world.AllowPool<SpriteAnimation>();
+            var builder = new EcsSystemsBuilder(world);
+            builder.AddWorld(events, "Events");
+            builder.ClearGroup();
+            builder.InjectSingleton(this); 
+            builder.Add<ClearActiveLayerSystem>();
+            builder.SetGroup("Intro");
+            builder.Add<IntroSystem>();
+            builder.SetGroup("Menu", false);
+            builder.Add<ParticleSystem>();
+            builder.Add<MainMenuSystem>();
+            builder.SetGroup("GameCore", false);
+            builder.Add<DrawBGSystem>();
+            builder.SetGroup("Game", false);
+            builder.Add<EnemySpawnSystem>();
+            builder.Add<Enemy1BehaviorSystem>();
+            builder.Add<Enemy2BehaviorSystem>();
+            builder.Add<Enemy3BehaviorSystem>();
+            builder.Add<ExplosionSystem>();
+            builder.Add<TransformSystem>();
+            builder.Add<LifetimeSystem>();
+            builder.Add<AnimationSystem>();
+            builder.Add<BulletSystem>();
+            builder.Add<PlayerSystem>();
+            builder.SetGroup("GameCore", false);
+            builder.Add<ReflectionSystem>();
+            builder.SetGroup("Shop", false);
+            builder.Add<ShopSystem>();
+            builder.SetGroup("Pauseable", false);
+            builder.Add<PauseGameSystem>();
+            builder.Add<DrawHudSystem>();
+            builder.ClearGroup();
+            builder.Add<CursorSystem>();
+            builder.Add<DisplayTextSystem>();
+            Systems = builder.Finish(1);
             Systems.Init();
             int entity = events.NewEntity();
             events.GetPool<IntroEvent>().Add(entity).Entering = true;
-            groupPool = events.GetPool<EcsGroupSystemState>();
-            statesFilter = events.Filter<EcsGroupSystemState>().End();
         }
         bool side = false;
         float anim = 0;
@@ -151,19 +163,7 @@ namespace Cornerstone
             }
             deltaTime = dt;
             time += dt;
-            for (int i = 0; i < groupEvents.Count; i++)
-            {
-                foreach (var item in statesFilter)
-                {
-                    ref var group = ref groupPool.Get(item);
-                    if (group.Name == groupEvents[i].Item1)
-                    {
-                        group.State = groupEvents[i].Item2;
-                    }
-                }
-            }
-            groupEvents.Clear();
-            Systems.Run();
+            Systems.Run(dt);
         }
 
         protected override void OnClosed()
@@ -172,64 +172,19 @@ namespace Cornerstone
             AudioManager.Dispose();
         }
 
-        public void EnableGroup(string name)
-        {
-            foreach (var ent in statesFilter)
-            {
-                ref var group = ref groupPool.Get(ent);
-                if (group.Name == name)
-                {
-                    group.State = true;
-                }
-            }
-        }
-
-        public void DisableGroup(string name)
-        {
-            foreach (var item in statesFilter)
-            {
-                ref var group = ref groupPool.Get(item);
-                if (group.Name == name)
-                {
-                    group.State = false;
-                }
-            }
-        }
-
-        public void ToggleGroup(string name)
-        {
-            foreach (var item in statesFilter)
-            {
-                ref var group = ref groupPool.Get(item);
-                if (group.Name == name)
-                {
-                    group.State = !group.State;
-                }
-            }
-        }
-
         public void EnableGroupNextFrame(string name)
         {
-            groupEvents.Add((name, true));
+            Systems.EnableGroupNextFrame(name);
         }
 
         public void DisableGroupNextFrame(string name)
         {
-            groupEvents.Add((name, false));
+            Systems.DisableGroupNextFrame(name);
         }
 
         public void ToggleGroupNextFrame(string name)
         {
-            bool state = false;
-            foreach (var item in statesFilter)
-            {
-                ref var group = ref groupPool.Get(item);
-                if (group.Name == name)
-                {
-                    state = group.State;
-                }
-            }
-            groupEvents.Add((name, !state));
+            Systems.ToggleGroupNextFrame(name);
         }
     }
 }

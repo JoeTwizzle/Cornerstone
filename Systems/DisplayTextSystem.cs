@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -14,12 +11,17 @@ using Cornerstone.Components;
 
 namespace Cornerstone.Systems
 {
-    internal class DisplayTextSystem:IEcsRunSystem
+    [EcsWrite("Canvas")]
+    internal class DisplayTextSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        MyGame game;
 
-        public void Run(EcsSystems systems)
+        public DisplayTextSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             layer.UpdateVisual();

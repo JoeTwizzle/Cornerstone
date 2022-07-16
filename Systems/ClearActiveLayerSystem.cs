@@ -2,19 +2,22 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 
 namespace Cornerstone.Systems
 {
-    internal class ClearActiveLayerSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    internal class ClearActiveLayerSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
-        public void Run(EcsSystems systems)
+        readonly MyGame game;
+
+        public ClearActiveLayerSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             game.ActiveLayer.Clear(new Color4(0, 0, 0, 0));
         }

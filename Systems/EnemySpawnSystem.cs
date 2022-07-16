@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -13,84 +10,53 @@ using Cornerstone.UI;
 using Cornerstone.Components;
 namespace Cornerstone.Systems
 {
-    internal class EnemySpawnSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsRead("Events", typeof(ResetGameEvent))]
+    [EcsWrite("Default")]
+    internal class EnemySpawnSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsFilter ResetEventFilter;
+        readonly EcsPool<Enemy1> Enemies1;
+        readonly EcsPool<Enemy2> Enemies2;
+        readonly EcsPool<Enemy3> Enemies3;
+        readonly EcsPool<Enemy> Enemies;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<SpriteAnimation> Visuals;
 
-        [EcsWorld]
-        EcsWorld world = null!;
+        readonly EcsFilter EnemyFilter;
+        readonly EcsFilter BulletFilter;
 
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsPool("Events")]
-        EcsPool<ResetGameEvent> ResetEvents = null!;
-
-        [EcsFilter("Events", typeof(ResetGameEvent))]
-        EcsFilter ResetEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool("Events")]
-        EcsPool<ShopEvent> ShopEvents = null!;
-
-        [EcsFilter("Events", typeof(ShopEvent))]
-        EcsFilter ShopEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Enemy1> Enemies1 = null!;
-
-        [EcsPool]
-        EcsPool<Enemy2> Enemies2 = null!;
-
-        [EcsPool]
-        EcsPool<Enemy3> Enemies3 = null!;
-
-        [EcsPool]
-        EcsPool<Enemy> Enemies = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<SpriteAnimation> Visuals = null!;
-
-        [EcsFilter(typeof(Transform), typeof(Enemy))]
-        EcsFilter EnemyFilter = null!;
-
-        [EcsPool]
-        EcsPool<Bullet> Bullets = null!;
-
-        [EcsFilter(typeof(Bullet))]
-        EcsFilter BulletFilter = null!;
-
-        bool active = false;
         float enemy1Timer = 0;
         float enemy2Timer = 0;
         float enemy3Timer = 0;
         int currentWave = 0;
 
-        Sprite enemy1Sprite = null!;
-        Sprite enemy2Sprite = null!;
-        Sprite enemy3Sprite = null!;
+        readonly Sprite enemy1Sprite;
+        readonly Sprite enemy2Sprite;
+        readonly Sprite enemy3Sprite;
+        float gracePeriod = 5;
+        float waveLength = 60;
 
-        public void Init(EcsSystems systems)
+        public EnemySpawnSystem(EcsSystems systems) : base(systems)
         {
+            game = GetSingleton<MyGame>();
+            world = GetWorld();
+            ResetEventFilter = FilterInc<ResetGameEvent>("Events").End();
+            Enemies1 = GetPool<Enemy1>();
+            Enemies2 = GetPool<Enemy2>();
+            Enemies3 = GetPool<Enemy3>();
+            Enemies = GetPool<Enemy>();
+            Transforms = GetPool<Transform>();
+            Visuals = GetPool<SpriteAnimation>();
+            EnemyFilter = FilterInc<Transform>().Inc<Enemy>().End();
+            BulletFilter = FilterInc<Bullet>().End();
             enemy1Sprite = new Sprite("SpriteSheets/Enemy-1.png");
             enemy2Sprite = new Sprite("SpriteSheets/Enemy-2.png");
             enemy3Sprite = new Sprite("SpriteSheets/Enemy-3.png");
         }
-        float gracePeriod = 5;
-        float waveLength = 60;
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             foreach (var entity in ResetEventFilter)
             {
@@ -120,7 +86,7 @@ namespace Cornerstone.Systems
                     world.DelEntity(entity);
                 }
                 game.EnableGroupNextFrame("Shop");
-                game.DisableGroup("Game");
+                game.DisableGroupNextFrame("Game");
             }
             if (waveLength <= 0)
             {

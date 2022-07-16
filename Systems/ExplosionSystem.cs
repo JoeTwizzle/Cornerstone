@@ -1,6 +1,4 @@
-﻿using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using Leopotam.EcsLite;
+﻿
 using ALAudio;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -11,52 +9,33 @@ using OpenTK.Mathematics;
 
 namespace Cornerstone.Systems
 {
-    internal class ExplosionSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsWrite("Canvas")]
+    [EcsWrite("Default",typeof(Transform), typeof(Explosion), typeof(Player))]
+    internal class ExplosionSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<Explosion> Explosions;
+        readonly EcsPool<Player> Players;
+        readonly EcsFilter ExplosionFilter;
+        readonly EcsFilter PlayerFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<Explosion> Explosions = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Transform), typeof(Explosion))]
-        EcsFilter ExplosionFilter = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        bool enabled = false;
         float timeAccumulator;
-        AudioSource[] explosionSources = new AudioSource[2];//2 simultaneous sounds
-        AudioBuffer explosionBuffer = null!;
+        readonly AudioSource[] explosionSources = new AudioSource[2];//2 simultaneous sounds
+        readonly AudioBuffer explosionBuffer;
         int explosionIndex = 0;
-        void PlaySound(float percentage)
-        {
 
-            explosionSources[explosionIndex].Play();
-            explosionIndex++;
-            explosionIndex %= explosionSources.Length;
-        }
-        public void Init(EcsSystems systems)
+        public ExplosionSystem(EcsSystems systems) : base(systems)
         {
+            Explosions = GetPool<Explosion>();
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+            ExplosionFilter = FilterInc<Transform>().Inc<Explosion>().End();
+            game = GetSingleton<MyGame>();
+            world = GetWorld();
+            Transforms = GetPool<Transform>();
+
             explosionBuffer = new AudioBuffer();
             explosionBuffer.Init("SFX/Bomb.wav");
             for (int i = 0; i < explosionSources.Length; i++)
@@ -67,7 +46,14 @@ namespace Cornerstone.Systems
             }
         }
 
-        public void Run(EcsSystems systems)
+        void PlaySound(float percentage)
+        {
+            explosionSources[explosionIndex].Play();
+            explosionIndex++;
+            explosionIndex %= explosionSources.Length;
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
 
             float dt = game.DeltaTime;

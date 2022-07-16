@@ -8,17 +8,24 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Systems
 {
-    internal class DrawHudSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    [EcsRead("Default", typeof(Player))]
+    internal class DrawHudSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
 
-        [EcsPool]
-        EcsPool<Player> Players = null!;
+        readonly EcsPool<Player> Players;
 
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-        public void Run(EcsSystems systems)
+        readonly EcsFilter PlayerFilter;
+
+        public DrawHudSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             foreach (var entity in PlayerFilter)

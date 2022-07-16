@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
+
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -13,17 +11,23 @@ using Cornerstone.UI;
 
 namespace Cornerstone.Systems
 {
-    internal class MainMenuSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    [EcsWrite("Events")]
+    internal class MainMenuSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld world = null!;
-        [EcsPool("Events")]
-        EcsPool<ResetGameEvent> ResetEvents = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsPool<ResetGameEvent> ResetEvents;
         Animation bounce = new Animation(0, 0.5f, Easing.Function.BounceEaseOut);
-        public void Run(EcsSystems systems)
+
+        public MainMenuSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
+            world = GetWorld("Events");
+            ResetEvents = GetPool<ResetGameEvent>("Events");
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             Color4 color = new Color4(29, 43, 83, 180);
             Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);
@@ -40,8 +44,8 @@ namespace Cornerstone.Systems
                 c = panel.OutlineColor = new Color4(255, 0, 77, 255);
                 if (game.MouseState.IsButtonDown(MouseButton.Left) && !game.MouseState.WasButtonDown(MouseButton.Left))
                 {
-                    game.DisableGroup("Menu");
-                    game.DisableGroup("Intro");
+                    game.DisableGroupNextFrame("Menu");
+                    game.DisableGroupNextFrame("Intro");
                     game.EnableGroupNextFrame("GameCore");
                     game.EnableGroupNextFrame("Game");
                     game.EnableGroupNextFrame("Pauseable");

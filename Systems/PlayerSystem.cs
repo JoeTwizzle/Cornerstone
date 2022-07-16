@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -15,57 +12,42 @@ using ALAudio;
 
 namespace Cornerstone.Systems
 {
-    internal class PlayerSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsRead("Events", typeof(ResetGameEvent))]
+    [EcsWrite("Default", typeof(Player), typeof(Bullet))]
+    internal class PlayerSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsWorld events;
+        readonly EcsPool<ResetGameEvent> ResetEvents;
+        readonly EcsFilter ResetEventFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
+        readonly EcsPool<Player> Players;
+        readonly EcsFilter PlayerFilter;
+        readonly EcsPool<Bullet> Bullets;
 
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool("Events")]
-        EcsPool<ResetGameEvent> ResetEvents = null!;
-
-        [EcsFilter("Events", typeof(ResetGameEvent))]
-        EcsFilter ResetEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool]
-        EcsPool<Bullet> Bullets = null!;
-
-        [EcsFilter(typeof(Bullet))]
-        EcsFilter BulletFilter = null!;
-
-        bool active = false;
         float timeAccumulator;
-        AudioSource playerJumpSource = null!;
-        AudioBuffer playerJumpBuffer = null!;
-        AudioSource[] shotSources = new AudioSource[10];//10 simultaneous sounds
-        AudioBuffer shotBuffer = null!;
+        readonly AudioSource playerJumpSource;
+        readonly AudioBuffer playerJumpBuffer;
+        readonly AudioSource[] shotSources = new AudioSource[10];//10 simultaneous sounds
+        readonly AudioBuffer shotBuffer;
         int shotIndex = 0;
-        void PlaySound()
+
+        float gravity = 200f;
+        float airTime = 0;
+
+        public PlayerSystem(EcsSystems systems) : base(systems)
         {
-            shotSources[shotIndex].SetPitch(Random.Shared.NextSingle() * 0.2f + 0.9f);
-            shotSources[shotIndex].Play();
-            shotIndex++;
-            shotIndex %= shotSources.Length;
-        }
-        public void Init(EcsSystems systems)
-        {
+            ResetEventFilter = FilterInc<ResetGameEvent>("Events").End();
+            ResetEvents = GetPool<ResetGameEvent>("Events");
+            events = GetWorld("Events");
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+            game = GetSingleton<MyGame>();
+            world = GetWorld();
+            Bullets = GetPool<Bullet>();
+
+
             shotBuffer = new AudioBuffer();
             shotBuffer.Init("SFX/Shoot.wav");
             for (int i = 0; i < shotSources.Length; i++)
@@ -81,7 +63,15 @@ namespace Cornerstone.Systems
             playerJumpSource.SetVolume(0.3f);
         }
 
-        public void Run(EcsSystems systems)
+        void PlaySound()
+        {
+            shotSources[shotIndex].SetPitch(Random.Shared.NextSingle() * 0.2f + 0.9f);
+            shotSources[shotIndex].Play();
+            shotIndex++;
+            shotIndex %= shotSources.Length;
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             foreach (var entity in ResetEventFilter)
             {
@@ -95,7 +85,7 @@ namespace Cornerstone.Systems
                 Players.Add(playerEnt);
             }
 
-            float dt = game.DeltaTime;
+            float dt = elapsed;
             var targetTimestepDuration = 1 / 120f;
 
             timeAccumulator += dt;
@@ -134,8 +124,6 @@ namespace Cornerstone.Systems
             }
         }
 
-        float gravity = 200f;
-        float airTime = 0;
         void Simulate(float dt, EcsSystems systems)
         {
             foreach (var entity in PlayerFilter)

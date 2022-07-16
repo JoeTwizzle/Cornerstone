@@ -1,35 +1,22 @@
-﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using System.Threading.Tasks;
-using TGELayerDraw;
-using Cornerstone.Helpers;
-using Cornerstone.Events;
-using Cornerstone.UI;
-using Cornerstone.Components;
+﻿using Cornerstone.Components;
 
 namespace Cornerstone.Systems
 {
-    internal class TransformSystem : IEcsRunSystem
+    [EcsWrite("Default", typeof(Transform))]
+    internal class TransformSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        EcsPool<Transform> Transforms;
+        EcsFilter TransformFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsFilter(typeof(Transform))]
-        EcsFilter TransformFilter = null!;
-        public void Run(EcsSystems systems)
+        public TransformSystem(EcsSystems systems) : base(systems)
         {
-            float dt = game.DeltaTime;
+            TransformFilter = FilterInc<Transform>().End();
+            Transforms = GetPool<Transform>();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
+        {
+            float dt = elapsed;
             foreach (var entity in TransformFilter)
             {
                 ref var t = ref Transforms.Get(entity);

@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -13,22 +10,23 @@ using Cornerstone.UI;
 
 namespace Cornerstone.Systems
 {
-    internal class IntroSystem : IEcsRunSystem
+    [EcsWrite("Canvas")]
+    internal class IntroSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
+        readonly MyGame game;
 
         Animation sineWaveAnimation = new Animation(0, 5.4f, Easing.Function.ExponentialEaseIn);
         Animation moveUpAnimation = new Animation(1f, 1.2f, Easing.Function.BounceEaseOut);
         Animation fillScreenAnimation = new Animation(0f, 1.5f, Easing.Function.ExponentialEaseOut);
         //Animation snowAnimation = new Animation(0f, 10f, Easing.Function.Linear, true);
         float cycle = 0;
-        bool running = false;
 
-        public void Run(EcsSystems systems)
+        public IntroSystem(EcsSystems systems) : base(systems)
+        {
+            game = GetSingleton<MyGame>();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             float dt = game.DeltaTime;
             if (game.KeyboardState.IsAnyKeyDown && !fillScreenAnimation.IsFinished)
@@ -109,7 +107,7 @@ namespace Cornerstone.Systems
             }
             if (fillScreenAnimation.JustFinished)
             {
-                game.EnableGroup("Menu");
+                game.EnableGroupNextFrame("Menu");
             }
             if (fillScreenAnimation.IsFinished)
             {

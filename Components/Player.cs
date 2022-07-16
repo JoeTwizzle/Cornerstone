@@ -1,4 +1,4 @@
-﻿using Leopotam.EcsLite;
+﻿
 using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
@@ -16,7 +16,7 @@ namespace Cornerstone.Components
         Crouching
     }
 
-    public struct Player : IEcsAutoReset<Player>
+    public struct Player : IEcsInit<Player>
     {
         public int Armor;
         public int ShootLevel;
@@ -30,7 +30,7 @@ namespace Cornerstone.Components
         public float FireRate;
         public PlayerState PlayerState;
 
-        public void AutoReset(ref Player c)
+        public static void OnInit(ref Player c)
         {
             c.Armor = 0;
             c.ShootLevel = 0;

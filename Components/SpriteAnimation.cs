@@ -1,15 +1,6 @@
-﻿using Leopotam.EcsLite;
-using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TGELayerDraw;
-
-namespace Cornerstone.Components
+﻿namespace Cornerstone.Components
 {
-    struct SpriteAnimation : IEcsAutoReset<SpriteAnimation>
+    struct SpriteAnimation : IEcsInit<SpriteAnimation>
     {
         public Sprite Sprite;
         public float AnimationAccumulator;
@@ -18,7 +9,7 @@ namespace Cornerstone.Components
         public int AnimationFrameCount;
         public int FrameWidth;
 
-        public void AutoReset(ref SpriteAnimation c)
+        public static void OnInit(ref SpriteAnimation c)
         {
             c.FrameWidth = 5;
             c.AnimationAccumulator = 0;

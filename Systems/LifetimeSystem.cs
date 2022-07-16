@@ -1,36 +1,24 @@
-﻿using OpenTK.Mathematics;
-using System;
-using System.Collections.Generic;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
-using System.Threading.Tasks;
-using TGELayerDraw;
-using Cornerstone.Helpers;
-using Cornerstone.Events;
-using Cornerstone.UI;
-using Cornerstone.Components;
+﻿using Cornerstone.Components;
 
 namespace Cornerstone.Systems
 {
-    internal class LifetimeSystem : IEcsRunSystem
+    [EcsWrite("Default")]
+    internal class LifetimeSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly EcsWorld world;
+        readonly EcsPool<Lifetime> Lifetimes;
+        readonly EcsFilter LifetimeFilter;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsPool]
-        EcsPool<Lifetime> Lifetimes = null!;
-
-        [EcsFilter(typeof(Lifetime))]
-        EcsFilter LifetimeFilter = null!;
-
-        public void Run(EcsSystems systems)
+        public LifetimeSystem(EcsSystems systems) : base(systems)
         {
-            float dt = game.DeltaTime;
+            world = GetWorld();
+            Lifetimes = GetPool<Lifetime>();
+            LifetimeFilter = FilterInc<Lifetime>().End();
+        }
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
+        {
+            float dt = elapsed;
             foreach (var entity in LifetimeFilter)
             {
                 ref var lifetime = ref Lifetimes.Get(entity);

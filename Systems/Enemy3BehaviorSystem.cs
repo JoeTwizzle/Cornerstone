@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -14,56 +11,37 @@ using Cornerstone.Components;
 
 namespace Cornerstone.Systems
 {
-    internal class Enemy3BehaviorSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsRead("Default", typeof(Player), typeof(Enemy3), typeof(Transform))]
+    [EcsWrite("Default", typeof(Enemy), typeof(Bullet))]
+    internal class Enemy3BehaviorSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsPool<Player> Players;
+        readonly EcsFilter PlayerFilter;
+        readonly EcsPool<Enemy3> Enemies3;
+        readonly EcsPool<Enemy> Enemies;
+        readonly EcsFilter TestEnemyFilter;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<Bullet> Bullets;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool]
-        EcsPool<Enemy3> Enemies3 = null!;
-
-        [EcsPool]
-        EcsPool<Enemy> Enemies = null!;
-
-        [EcsFilter(typeof(Transform), typeof(Enemy3), typeof(Enemy))]
-        EcsFilter TestEnemyFilter = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<Bullet> Bullets = null!;
-
-        [EcsFilter(typeof(Bullet))]
-        EcsFilter BulletFilter = null!;
-
-        bool active = false;
         float timeAccumulator;
 
-        public void Init(EcsSystems systems)
+        public Enemy3BehaviorSystem(EcsSystems systems) : base(systems)
         {
-
+            Players = GetPool<Player>();
+            PlayerFilter = FilterInc<Player>().End();
+            game = GetSingleton<MyGame>();
+            world = GetWorld();
+            Enemies3 = GetPool<Enemy3>();
+            Enemies = GetPool<Enemy>();
+            TestEnemyFilter = FilterInc<Transform>().Inc<Enemy3>().Inc<Enemy>().End();
+            Transforms = GetPool<Transform>();
+            Bullets = GetPool<Bullet>();
         }
 
-        public void Run(EcsSystems systems)
+
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             float dt = game.DeltaTime;
             timeAccumulator += dt;

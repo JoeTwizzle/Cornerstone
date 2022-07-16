@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using Leopotam.EcsLite;
-using Leopotam.EcsLite.ExtendedSystems;
-using Leopotam.EcsLite.Di;
 using System.Threading.Tasks;
 using TGELayerDraw;
 using Cornerstone.Helpers;
@@ -15,58 +12,33 @@ using ALAudio;
 
 namespace Cornerstone.Systems
 {
-    internal class Enemy2BehaviorSystem : IEcsRunSystem, IEcsInitSystem
+    [EcsRead("Default", typeof(Enemy2), typeof(Transform))]
+    [EcsWrite("Default", typeof(Enemy), typeof(Bullet))]
+    internal class Enemy2BehaviorSystem : EcsSystem, IEcsRunSystem
     {
-        [EcsInject]
-        MyGame game = null!;
+        readonly MyGame game;
+        readonly EcsWorld world;
+        readonly EcsPool<Enemy2> TestEnemies;
+        readonly EcsPool<Enemy> Enemies;
+        readonly EcsFilter TestEnemyFilter;
+        readonly EcsPool<Transform> Transforms;
+        readonly EcsPool<Bullet> Bullets;
 
-        [EcsWorld]
-        EcsWorld world = null!;
-
-        [EcsWorld("Events")]
-        EcsWorld events = null!;
-
-        [EcsPool("Events")]
-        EcsPool<StartEvent> StartEvents = null!;
-
-        [EcsFilter("Events", typeof(StartEvent))]
-        EcsFilter StartEventFilter = null!;
-
-        [EcsPool]
-        EcsPool<Player> Players = null!;
-
-        [EcsFilter(typeof(Player))]
-        EcsFilter PlayerFilter = null!;
-
-        [EcsPool]
-        EcsPool<SpriteAnimation> SpriteAnimations = null!;
-
-        [EcsPool]
-        EcsPool<Enemy2> TestEnemies = null!;
-
-        [EcsPool]
-        EcsPool<Enemy> Enemies = null!;
-
-        [EcsFilter(typeof(Transform), typeof(Enemy2), typeof(Enemy))]
-        EcsFilter TestEnemyFilter = null!;
-
-        [EcsPool]
-        EcsPool<Transform> Transforms = null!;
-
-        [EcsPool]
-        EcsPool<Bullet> Bullets = null!;
-
-        [EcsFilter(typeof(Bullet))]
-        EcsFilter BulletFilter = null!;
-
-        bool active = false;
         float timeAccumulator;
+        readonly AudioSource[] explosionSources = new AudioSource[10];//10 simultaneous sounds
+        AudioBuffer explosionBuffer;
+        int explosionIndex = 0;
 
-        Sprite sprite = null!;
-
-        public void Init(EcsSystems systems)
+        public Enemy2BehaviorSystem(EcsSystems systems) : base(systems)
         {
-            sprite = new Sprite("SpriteSheets/Enemy-2.png");
+            game = GetSingleton<MyGame>();
+            world= GetWorld();
+            TestEnemies = GetPool<Enemy2>();
+            Enemies = GetPool<Enemy>();
+            TestEnemyFilter = FilterInc<Transform>().Inc<Enemy2>().Inc<Enemy>().End();
+            Transforms = GetPool<Transform>();
+            Bullets = GetPool<Bullet>();
+
             explosionBuffer = new AudioBuffer();
             explosionBuffer.Init("SFX/BombDrop.wav");
             for (int i = 0; i < explosionSources.Length; i++)
@@ -76,27 +48,25 @@ namespace Cornerstone.Systems
                 explosionSources[i].SetVolume(0.15f);
             }
         }
-        AudioSource[] explosionSources = new AudioSource[10];//10 simultaneous sounds
-        AudioBuffer explosionBuffer = null!;
-        int explosionIndex = 0;
+
         void PlaySound()
         {
             explosionSources[explosionIndex].Play();
             explosionIndex++;
             explosionIndex %= explosionSources.Length;
         }
-        public void Run(EcsSystems systems)
+        public void Run(EcsSystems systems, float elapsed, int threadId)
         {
 
             float dt = game.DeltaTime;
-                timeAccumulator += dt;
-                var targetTimestepDuration = 1 / 120f;
-                while (timeAccumulator >= targetTimestepDuration)
-                {
-                    Simulate(targetTimestepDuration, systems);
-                    timeAccumulator -= targetTimestepDuration;
-                }
-            
+            timeAccumulator += dt;
+            var targetTimestepDuration = 1 / 120f;
+            while (timeAccumulator >= targetTimestepDuration)
+            {
+                Simulate(targetTimestepDuration, systems);
+                timeAccumulator -= targetTimestepDuration;
+            }
+
         }
 
         private void Simulate(float dt, EcsSystems systems)
