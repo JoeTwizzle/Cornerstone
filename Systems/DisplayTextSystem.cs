@@ -24,9 +24,7 @@ namespace Cornerstone.Systems
         public void Run(EcsSystems systems, float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
-            layer.UpdateVisual();
-            game.DisplaySprite(layer);
-            game.TextRenderer.Display();
+            
         }
     }
 }

@@ -115,7 +115,7 @@ namespace Cornerstone
             builder.ClearGroup();
             builder.Add<CursorSystem>();
             builder.Add<DisplayTextSystem>();
-            Systems = builder.Finish(1);
+            Systems = builder.Finish(2);
             Systems.Init();
             int entity = events.NewEntity();
             events.GetPool<IntroEvent>().Add(entity).Entering = true;
@@ -164,6 +164,10 @@ namespace Cornerstone
             deltaTime = dt;
             time += dt;
             Systems.Run(dt);
+            ActiveLayer.UpdateVisual();
+            DisplaySprite(ActiveLayer);
+            //TextRenderer.DrawText(Vector2.Zero, "" + dt * 1000 + "ms", Color4.White);
+            TextRenderer.Display();
         }
 
         protected override void OnClosed()
