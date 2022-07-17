@@ -16,7 +16,7 @@ namespace Cornerstone.Systems
             LifetimeFilter = FilterInc<Lifetime>().End();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             float dt = elapsed;
             foreach (var entity in LifetimeFilter)

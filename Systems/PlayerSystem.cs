@@ -71,7 +71,7 @@ namespace Cornerstone.Systems
             shotIndex %= shotSources.Length;
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             foreach (var entity in ResetEventFilter)
             {

@@ -20,7 +20,7 @@ namespace Cornerstone.Systems
             AnimationFilter = FilterInc<SpriteAnimation>().Inc<Transform>().End();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             float dt = elapsed;
             var layer = game.ActiveLayer;

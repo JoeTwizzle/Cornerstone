@@ -21,7 +21,7 @@ namespace Cornerstone.Systems
             game = GetSingleton<MyGame>();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             

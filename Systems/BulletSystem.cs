@@ -80,7 +80,7 @@ namespace Cornerstone.Systems
             explosionIndex %= explosionSources.Length;
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             float dt = game.DeltaTime;
             timeAccumulator += dt;

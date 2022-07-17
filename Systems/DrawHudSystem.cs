@@ -25,7 +25,7 @@ namespace Cornerstone.Systems
             PlayerFilter = FilterInc<Player>().End();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             foreach (var entity in PlayerFilter)

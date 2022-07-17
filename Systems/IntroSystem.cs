@@ -26,7 +26,7 @@ namespace Cornerstone.Systems
             game = GetSingleton<MyGame>();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             float dt = game.DeltaTime;
             if (game.KeyboardState.IsAnyKeyDown && !fillScreenAnimation.IsFinished)

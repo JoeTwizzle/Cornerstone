@@ -56,7 +56,7 @@ namespace Cornerstone.Systems
             enemy3Sprite = new Sprite("SpriteSheets/Enemy-3.png");
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             foreach (var entity in ResetEventFilter)
             {

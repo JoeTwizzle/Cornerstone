@@ -27,7 +27,7 @@ namespace Cornerstone.Systems
             ResetEvents = GetPool<ResetGameEvent>("Events");
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             Color4 color = new Color4(29, 43, 83, 180);
             Color4 outlineColor = new Color4(0.1f, 0.4f, 0.8f, 0.4f);

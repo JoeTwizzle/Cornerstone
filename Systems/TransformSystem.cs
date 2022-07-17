@@ -14,7 +14,7 @@ namespace Cornerstone.Systems
             Transforms = GetPool<Transform>();
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             float dt = elapsed;
             foreach (var entity in TransformFilter)

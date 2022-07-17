@@ -32,7 +32,7 @@ namespace Cornerstone.Systems
             PauseOutSource.SetBuffer(PauseOutBuffer);
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             if (game.KeyboardState.IsKeyPressed(OpenTK.Windowing.GraphicsLibraryFramework.Keys.Escape))
             {

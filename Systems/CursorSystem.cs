@@ -48,7 +48,7 @@ namespace Cornerstone.Systems
             }
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             var c = Color4.FromHsv(new Vector4(game.Time * 0.2f % 1f, 1, 1, 1));
             var layer = game.ActiveLayer;

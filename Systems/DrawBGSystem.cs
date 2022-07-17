@@ -24,7 +24,7 @@ namespace Cornerstone.Systems
             hardwareSprite = new HardwareSprite("map-1.png");
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             var layer = game.ActiveLayer;
             layer.DrawPartialSprite(0, 0, hardwareSprite, 0, 0, 128, 82, false, BlendMode.None);

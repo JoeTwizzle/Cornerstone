@@ -32,7 +32,7 @@ namespace Cornerstone.Systems
             shopBG = new Sprite("ShopBG.png");
         }
 
-        public void Run(EcsSystems systems, float elapsed, int threadId)
+        public void Run(float elapsed, int threadId)
         {
             game.DisableGroupNextFrame("Pauseable");
             var layer = game.ActiveLayer;
