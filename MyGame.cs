@@ -114,7 +114,7 @@ namespace Cornerstone
             builder.Add<DrawHudSystem>();
             builder.ClearGroup();
             builder.Add<CursorSystem>();
-            builder.Add<DisplayTextSystem>();
+            //builder.Add<DisplayTextSystem>();
             Systems = builder.Finish(2);
             Systems.Init();
             int entity = events.NewEntity();
