@@ -4,7 +4,7 @@ namespace Cornerstone.Systems
 {
     [EcsWrite("Canvas")]
     [EcsRead("Default", typeof(Transform))]
-    [EcsWrite("Default", typeof(Animation))]
+    [EcsWrite("Default", typeof(SpriteAnimation))]
     internal class AnimationSystem : EcsSystem, IEcsRunSystem
     {
         readonly MyGame game;
