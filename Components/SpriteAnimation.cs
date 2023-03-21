@@ -1,6 +1,6 @@
 ﻿namespace Cornerstone.Components
 {
-    struct SpriteAnimation : IEcsInit<SpriteAnimation>
+    struct SpriteAnimation : IComponent, IEcsInit<SpriteAnimation>
     {
         public Sprite Sprite;
         public float AnimationAccumulator;

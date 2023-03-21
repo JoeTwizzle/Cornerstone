@@ -16,7 +16,7 @@ namespace Cornerstone.Components
         Crouching
     }
 
-    public struct Player : IEcsInit<Player>
+    public struct Player : IComponent, IEcsInit<Player>
     {
         public int Armor;
         public int ShootLevel;

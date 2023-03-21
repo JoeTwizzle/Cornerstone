@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Components
 {
-    struct Transform
+    struct Transform : IComponent
     {
         public Vector2 Position;
         public Vector2 Velocity;

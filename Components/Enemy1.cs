@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Components
 {
-    struct Enemy1
+    struct Enemy1 : IComponent
     {
         
     }

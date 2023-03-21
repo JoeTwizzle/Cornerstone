@@ -21,7 +21,7 @@ namespace Cornerstone.Components
         Penetrating = 4
     }
 
-    public struct Bullet
+    public struct Bullet : IComponent
     {
         public Vector2 Position;
         public Vector2 PrevPosition;

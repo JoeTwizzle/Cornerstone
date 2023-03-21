@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Events
 {
-    struct StartEvent
+    struct StartEvent : IComponent
     {
         public bool State;
     }

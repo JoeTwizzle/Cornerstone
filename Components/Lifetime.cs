@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Components
 {
-    struct Lifetime
+    struct Lifetime : IComponent
     {
         public float Time;
     }

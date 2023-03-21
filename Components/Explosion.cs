@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Components
 {
-    struct Explosion
+    struct Explosion : IComponent
     {
         public Team team;
         public float Size;

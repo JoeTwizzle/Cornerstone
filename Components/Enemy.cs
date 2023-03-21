@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Components
 {
-    struct Enemy : IEcsInit<Enemy>
+    struct Enemy : IComponent, IEcsInit<Enemy>
     {
         public Box2i HitBox;
         public int HP;

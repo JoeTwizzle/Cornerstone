@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Cornerstone.Events
 {
-    struct ResetGameEvent
+    struct ResetGameEvent : IComponent
     {
     }
 }
